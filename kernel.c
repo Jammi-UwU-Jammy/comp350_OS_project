@@ -10,11 +10,14 @@ void readSector(char* buffer, int sector);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
 
 int main(){
-	char buffer[512];
-	readSector(buffer, 30);
+	//char buffer[512];
+	//readSector(buffer, 30);
 	//printString(buffer);
+	
+	char line[80];
 	makeInterrupt21();
-	interrupt(0x21,0,0,0,0);	
+	interrupt(0x21, 1, line, 0, 0);	
+	interrupt(0x21, 0, line, 0, 0);
 
 	printString("Done.\n");
 	while(1);
@@ -23,6 +26,16 @@ int main(){
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
 	printString("Interrupt 21.\n");
+	switch(ax){
+		case 0:
+			printString(bx);	break;
+		case 1:
+			readString(bx);		break;
+		case 2:
+			readSector(bx, cx);	break;
+		default: 
+			printString("AX invalid.");
+	}
 }
 
 void readSector(char* buffer, int sector){
