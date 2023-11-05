@@ -1,21 +1,29 @@
-#include <stdio.h>
-#include <ctype.h>
 
 #define STR_LIM 80
 
-extern int interrupt(int, int, int, int, int);
-void printString(char* str);
-void printChar(char ch);
-void readString(char* str);
-
+extern int interrupt(int number, int AX, int BX, int CX, int DX);
+void printString(char* );
+void printChar(char );
+void readString(char* );
+void readSector(char* buffer, int sector);
 
 int main(){
-	char line[STR_LIM];
-	printString("Enter a line: \n");
-	readString(line);
-	printString(line);
+	char buffer[512];
+	readSector(buffer, 30);
+	printString(buffer);
+
+	printString("Done.\n");
 	while(1);
 
+}
+
+void readSector(char* buffer, int sector){
+	int al = 1, ah = 2, cl = sector+1, ch = 0 , dl = 0x80, dh = 0;
+	int ax = ah*256 + al; 
+	int cx = ch*256 + cl; 
+	int dx = dh*256 + dl;
+
+	interrupt(0x13, ax, buffer, cx, dx);
 }
 
 void printChar (char ch){
@@ -27,6 +35,12 @@ void printChar (char ch){
 
 void printString(char* str){
 	while (*str) printChar(*str++); //putc(*str++, stdout);
+	
+	//int i = 0;
+	//while ( str[i] != '\0'){
+	//	printChar(str[i]);
+	//	i++;
+	//}
 }
 void readString(char* string){
 	char letter;
