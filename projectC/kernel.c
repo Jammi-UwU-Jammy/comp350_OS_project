@@ -17,7 +17,7 @@ void getSubstring(char* str, int begin, int end, char* buffer);
 
 int main(){
 	//char buffer[512];
-	//readSector(buffer, 2);
+	//readSector(buffer, 30);
 	//printString(buffer);
 	
 	//char line[80];
@@ -83,8 +83,9 @@ void readFile(char* fileName){
 		int i = 0, sector = fileLocation + 6;
 		for ( ; i < 32 ; i++){
 			if (buffer[sector+i] == 0) break;
+			
 			readSector(fileBuffer+512*i, buffer[sector+i]);
-			//printString(fileBuffer+512*i);
+			printString(fileBuffer+512*i);
 		}
 	}
 	
