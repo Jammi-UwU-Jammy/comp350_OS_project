@@ -2,19 +2,27 @@
 #define STR_LIM 80
 
 extern int interrupt(int number, int AX, int BX, int CX, int DX);
+extern void makeInterrupt21();
 void printString(char* );
 void printChar(char );
 void readString(char* );
 void readSector(char* buffer, int sector);
+void handleInterrupt21(int ax, int bx, int cx, int dx);
 
 int main(){
 	char buffer[512];
 	readSector(buffer, 30);
-	printString(buffer);
+	//printString(buffer);
+	makeInterrupt21();
+	interrupt(0x21,0,0,0,0);	
 
 	printString("Done.\n");
 	while(1);
 
+}
+
+void handleInterrupt21(int ax, int bx, int cx, int dx){
+	printString("Interrupt 21.\n");
 }
 
 void readSector(char* buffer, int sector){
@@ -35,12 +43,6 @@ void printChar (char ch){
 
 void printString(char* str){
 	while (*str) printChar(*str++); //putc(*str++, stdout);
-	
-	//int i = 0;
-	//while ( str[i] != '\0'){
-	//	printChar(str[i]);
-	//	i++;
-	//}
 }
 void readString(char* string){
 	char letter;
