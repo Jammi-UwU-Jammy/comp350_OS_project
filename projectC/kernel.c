@@ -8,7 +8,7 @@ void printChar(char );
 void readString(char* );
 void readSector(char* buffer, int sector);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
-void readFile(char*);
+void readFile();
 
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
@@ -25,7 +25,14 @@ int main(){
 	//interrupt(0x21, 1, line, 0, 0);	
 	//interrupt(0x21, 0, line, 0, 0);
 
-	readFile("messag");
+//	readFile("messag");
+
+	char buffer[13312];
+	int sectorsRead;
+	makeInterrupt21();
+	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
+	if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
+	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
 	
 	printString("\nDone.\n");
 	while(1);
@@ -63,37 +70,35 @@ void getSubstring(char* str, int begin, int end, char* result){
 
 /*========================================================*/
 
-void readFile(char* fileName){
+void readFile(char* fileName, char* fileBuffer, int* s){
 	char buffer[521];
-	int ax = 3, dx;
-
 	int i = 0, fileLocation = -1;
+
 	readSector(buffer, 2);
 	for ( ; i < 512 ; i+=32){
 		char file[7]; getSubstring(buffer, i, i+6, file);
-	
 		if (stringsEqual(fileName, file) == 1){
 			printString("Found: "); printString(file); 
 			fileLocation = i; break;
 		}
 	}
-
+	
 	if (fileLocation != -1){
-		char fileBuffer[13312];
-		int i = 0, sector = fileLocation + 6;
-		for ( ; i < 32 ; i++){
+		int sector = fileLocation + 6;
+		for ( i=0 ; i<32 ; i++){
 			if (buffer[sector+i] == 0) break;
 			
 			readSector(fileBuffer+512*i, buffer[sector+i]);
-			printString(fileBuffer+512*i);
 		}
-	}
+	} else i = 0;
+	*s = i;	
 	
-	//interrupt(0x3, fileName, buffer,);
+	//TODO: the function is correct but interrupt call 0x21 is wrong code, calling it becomes recursive call
+	//interrupt(0x21, 3, fileName, fileBuffer, &i);
 }
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
-	printString("Interrupt 21.\n");
+	//printString("Interrupt 21.\n");
 	switch(ax){
 		case 0:
 			printString(bx);	break;
@@ -101,6 +106,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 			readString(bx);		break;
 		case 2:
 			readSector(bx, cx);	break;
+		case 3:
+			readFile(bx, cx, dx);		break;
 		default: 
 			printString("AX invalid.");
 	}
