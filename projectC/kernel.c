@@ -41,18 +41,22 @@ int strLen(char* str){
 int  stringsEqual(char* str1, char* str2){
      	int i = 0;
     	int leng1 = strLen(str1), leng2 = strLen(str2);
+	if (leng1 != leng2) {
+		return 0;
+	}
 
      	while (str1[i] == str2[i] && str1[i] != '\0') i++;
 	
-	if (i == leng1) return 'Y'; else return 'N';
+	if (i == leng1) return 1; else return 0;
 };
 
 void getSubstring(char* str, int begin, int end, char* result){
-	//char resultString[7]; // interval of [begin, end)
+	// interval of [begin, end)
 	int i = 0;
+
 	for(i ; i < end-begin; i++){
 		result[i] = str[i+begin];
-	//	printChar(result[i]);
+		//printChar(result[i]);
 	}
 	result[i] = '\0';
 }
@@ -68,7 +72,7 @@ void readFile(char* fileName){
 	for ( ; i < 512 ; i+=32){
 		char file[7]; getSubstring(buffer, i, i+6, file);
 	
-		if (stringsEqual(fileName, file) == 'Y'){
+		if (stringsEqual(fileName, file) == 1){
 			printString("Found: "); printString(file); 
 			fileLocation = i; break;
 		}
@@ -78,7 +82,7 @@ void readFile(char* fileName){
 		char fileBuffer[13312];
 		int i = 0, sector = fileLocation + 6;
 		for ( ; i < 32 ; i++){
-			if (buffer[sector] == 0) break;
+			if (buffer[sector+i] == 0) break;
 			readSector(fileBuffer+512*i, buffer[sector+i]);
 			//printString(fileBuffer+512*i);
 		}
