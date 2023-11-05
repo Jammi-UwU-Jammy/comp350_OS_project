@@ -3,17 +3,21 @@
 
 extern int interrupt(int number, int AX, int BX, int CX, int DX);
 extern void makeInterrupt21();
+extern void putInMemory(int seg, int addr, char ch);
+extern void launchProgram(int seg);
+
 void printString(char* );
 void printChar(char );
 void readString(char* );
 void readSector(char* buffer, int sector);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
 void readFile();
+void terminate();
 
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
 void getSubstring(char* str, int begin, int end, char* buffer);
-
+void executeProgram(char*);
 
 int main(){
 	//char buffer[512];
@@ -27,14 +31,17 @@ int main(){
 
 //	readFile("messag");
 
-	char buffer[13312];
-	int sectorsRead;
-	makeInterrupt21();
-	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
-	if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
-	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
+//	char buffer[13312];
+//	int sectorsRead;
+//	makeInterrupt21();
+//	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
+//	if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
+//	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
 	
-	printString("\nDone.\n");
+	makeInterrupt21();
+	interrupt(0x21, 4, "tstpr1", 0, 0);
+	printString("Done");
+	
 	while(1);
 
 }
@@ -68,7 +75,20 @@ void getSubstring(char* str, int begin, int end, char* result){
 	result[i] = '\0';
 }
 
-/*========================================================*/
+/*==============Functions needed for the assignment===================*/
+void terminate(){
+	while(1);
+}
+
+void executeProgram(char* name){
+	char buffer[13312]; int i;
+	readFile(name, buffer, 0);
+	for (i=0 ; i < 13312; i++){
+		putInMemory(0x2000, i, buffer[i]);
+	}
+	launchProgram(0x2000);
+
+}
 
 void readFile(char* fileName, char* fileBuffer, int* s){
 	char buffer[521];
@@ -107,7 +127,11 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 		case 2:
 			readSector(bx, cx);	break;
 		case 3:
-			readFile(bx, cx, dx);		break;
+			readFile(bx, cx, dx);	break;
+		case 4:
+			executeProgram(bx);	break;
+		case 5: 
+			terminate();		break;
 		default: 
 			printString("AX invalid.");
 	}
