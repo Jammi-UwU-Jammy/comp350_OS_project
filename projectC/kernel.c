@@ -12,7 +12,7 @@ void readFile(char*);
 
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
-char* getSubstring(char* str, int begin, int end);
+void getSubstring(char* str, int begin, int end, char* buffer);
 
 
 int main(){
@@ -25,11 +25,9 @@ int main(){
 	//interrupt(0x21, 1, line, 0, 0);	
 	//interrupt(0x21, 0, line, 0, 0);
 
-	readFile("kernel");
-	//printChar(stringsEqual("123", "123"));
-	//getSubstring("string", 1, 3);
+	readFile("messag");
 	
-	printString("Done.\n");
+	printString("\nDone.\n");
 	while(1);
 
 }
@@ -49,16 +47,14 @@ int  stringsEqual(char* str1, char* str2){
 	if (i == leng1) return 'Y'; else return 'N';
 };
 
-char* getSubstring(char* str, int begin, int end){
-	char resultString[7]; // interval of [begin, end)
+void getSubstring(char* str, int begin, int end, char* result){
+	//char resultString[7]; // interval of [begin, end)
 	int i = 0;
 	for(i ; i < end-begin; i++){
-		resultString[i] = str[i+begin];
-	//	printChar(resultString[i]);
+		result[i] = str[i+begin];
+	//	printChar(result[i]);
 	}
-	resultString[i] = '\0';
-	printString(resultString);
-	return resultString;
+	result[i] = '\0';
 }
 
 /*========================================================*/
@@ -67,12 +63,24 @@ void readFile(char* fileName){
 	char buffer[521];
 	int ax = 3, dx;
 
-	int i = 0;
+	int i = 0, fileLocation = -1;
 	readSector(buffer, 2);
 	for ( ; i < 512 ; i+=32){
-		char* file = getSubstring(buffer, i, i+6);
+		char file[7]; getSubstring(buffer, i, i+6, file);
+	
 		if (stringsEqual(fileName, file) == 'Y'){
-			printString(file);
+			printString("Found: "); printString(file); 
+			fileLocation = i; break;
+		}
+	}
+
+	if (fileLocation != -1){
+		char fileBuffer[13312];
+		int i = 0, sector = fileLocation + 6;
+		for ( ; i < 32 ; i++){
+			if (buffer[sector] == 0) break;
+			readSector(fileBuffer+512*i, buffer[sector+i]);
+			//printString(fileBuffer+512*i);
 		}
 	}
 	
