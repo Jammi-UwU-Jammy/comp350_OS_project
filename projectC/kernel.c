@@ -13,11 +13,11 @@ void readSector(char* buffer, int sector);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
 void readFile();
 void terminate();
+void executeProgram(char*);
 
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
 void getSubstring(char* str, int begin, int end, char* buffer);
-void executeProgram(char*);
 
 int main(){
 	//char buffer[512];
@@ -31,17 +31,20 @@ int main(){
 
 //	readFile("messag");
 
-//	char buffer[13312];
-//	int sectorsRead;
-//	makeInterrupt21();
-//	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
-//	if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
-//	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
+	//char buffer[13312];
+	//int sectorsRead;
+	//makeInterrupt21();
+	//interrupt(0x21, 3, "messag", buffer, &sectorsRead);
+	//if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
+	//else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
+	
+	char shell[6]; 
+	shell[0]='s'; shell[1]='h'; shell[2]='e'; shell[3]='l'; shell[4]='l'; shell[5]='\0';
 	
 	makeInterrupt21();
 	interrupt(0x21, 4, "tstpr1", 0, 0);
-	printString("Done");
-	
+
+	//printString("Done");
 	while(1);
 
 }
@@ -87,7 +90,7 @@ void executeProgram(char* name){
 		putInMemory(0x2000, i, buffer[i]);
 	}
 	launchProgram(0x2000);
-
+	
 }
 
 void readFile(char* fileName, char* fileBuffer, int* s){
