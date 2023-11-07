@@ -1,8 +1,10 @@
 
 void main(){
-       // char* input;
+       char* input;
+       
+       syscall(0, ">>");
         while(1){
-                syscall(0, "Hello\n");
+                syscall(1, input);
         };
 }
 
