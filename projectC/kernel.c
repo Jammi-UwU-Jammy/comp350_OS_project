@@ -24,10 +24,10 @@ int main(){
 	//readSector(buffer, 30);
 	//printString(buffer);
 	
-	//char line[80];
-	//makeInterrupt21();
-	//interrupt(0x21, 1, line, 0, 0);	
-	//interrupt(0x21, 0, line, 0, 0);
+//	char line[80];
+//	makeInterrupt21();
+//	interrupt(0x21, 1, line, 0, 0);	
+//	interrupt(0x21, 0, line, 0, 0);
 
 
 //	char buffer[13312];
@@ -98,7 +98,7 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 	for ( ; i < 512 ; i+=32){
 		char file[7]; getSubstring(buffer, i, i+6, file);
 		if (stringsEqual(fileName, file) == 1){
-			printString("Found: "); printString(file); 
+			printString("Found: "); printString(file); printString("\nReading...\n");
 			fileLocation = i; break;
 		}
 	}
@@ -168,6 +168,7 @@ void readString(char* string){
                 if (letter == 0xd || index == STR_LIM-2) break;
 
                 if (letter == 0x8){
+			if (index < 1) continue;
                         printChar(0x8); printChar(' '); printChar(0x8);
                         index--;
                 }else{
@@ -176,7 +177,7 @@ void readString(char* string){
                         index++;
                 }
         }
-        printString("\r\n");
+        printString("\n");
         string[index] = '\0';
 }
 
