@@ -83,8 +83,8 @@ void terminate(){
 }
 
 void executeProgram(char* name){
-	char buffer[13312]; int i;
-	readFile(name, buffer, 0);
+	char buffer[13312]; int i, sectors;
+	readFile(name, buffer, &ectors);
 	for (i=0 ; i < 13312; i++){
 		putInMemory(0x2000, i, buffer[i]);
 	}
