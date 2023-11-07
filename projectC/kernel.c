@@ -30,19 +30,17 @@ int main(){
 	//interrupt(0x21, 0, line, 0, 0);
 
 
-	char buffer[13312];
-	int sectorsRead;
-	makeInterrupt21();
-	interrupt(0x21, 3, "tstpr1", buffer, &sectorsRead);
-	if (sectorsRead>0)	interrupt(0x21, 4, "tstp1", 0, 0);
-	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
-	
-//	char shell[6]; 
-//	shell[0]='s'; shell[1]='h'; shell[2]='e'; shell[3]='l'; shell[4]='l'; shell[5]='\0';
-//	
+//	char buffer[13312];
+//	int sectorsRead;
 //	makeInterrupt21();
-//	interrupt(0x21, 4, "tstpr1", 0, 0);
-//
+//	interrupt(0x21, 3, "tstpr1", buffer, &sectorsRead);
+	
+	char shellname[6]; 
+	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
+	//executeProgram(shellname);
+	makeInterrupt21();
+	interrupt(0x21, 4, shellname, 0, 0);
+
 	printString("Done");
 	while(1);
 
@@ -84,12 +82,12 @@ void terminate(){
 
 void executeProgram(char* name){
 	char buffer[13312]; int i, sectors;
-	readFile(name, buffer, &ectors);
+	readFile(name, buffer, &sectors);
 	for (i=0 ; i < 13312; i++){
 		putInMemory(0x2000, i, buffer[i]);
 	}
-	launchProgram(0x2000);
-	
+	if (sectors != 0) launchProgram(0x2000);
+	else printString("Can't find program in memory.\n");
 }
 
 void readFile(char* fileName, char* fileBuffer, int* s){

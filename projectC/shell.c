@@ -1,7 +1,6 @@
-#define STR_LIM 80
 
 void main(){
-        char* input;
+       // char* input;
         while(1){
                 syscall(0, "Hello\n");
         };
