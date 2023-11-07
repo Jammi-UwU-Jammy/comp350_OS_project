@@ -25,7 +25,7 @@ int main(){
 }
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
-	printString("Interrupt 21.\n");
+//	printString("Interrupt 21.\n");
 	switch(ax){
 		case 0:
 			printString(bx);	break;
@@ -55,20 +55,29 @@ void printChar (char ch){
 }
 
 void printString(char* str){
-	while (*str) printChar(*str++); //putc(*str++, stdout);
+	while (*str) {
+		if (*str == '\n') printChar('\r');
+		printChar(*str++); //putc(*str++, stdout);
+	}
 }
 void readString(char* string){
 	char letter;
 	int index = 0;
 	while(1){
 		letter = interrupt(0x16, 0, 0, 0, 0);
-		string[index] = letter; 
-		printChar(letter);
-		index++;
 		
-		if (letter == 0xd || index == STR_LIM-2) break;		
+		if (letter == 0xd || index == STR_LIM-2) break;
+		
+		if (letter == 0x8){
+			printChar(0x8); printChar(' '); printChar(0x8);
+			index--;
+		}else{
+			string[index] = letter; 
+			printChar(letter);
+			index++;
+		}
 	}
-	printChar('\n');
-	string[index + 1] = '\0';
+	printString("\r\n");
+	string[index] = '\0';
 }
 

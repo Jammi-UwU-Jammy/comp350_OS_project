@@ -29,22 +29,21 @@ int main(){
 	//interrupt(0x21, 1, line, 0, 0);	
 	//interrupt(0x21, 0, line, 0, 0);
 
-//	readFile("messag");
 
-	//char buffer[13312];
-	//int sectorsRead;
-	//makeInterrupt21();
-	//interrupt(0x21, 3, "messag", buffer, &sectorsRead);
-	//if (sectorsRead>0)	interrupt(0x21, 0, buffer, 0, 0);
-	//else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
-	
-	char shell[6]; 
-	shell[0]='s'; shell[1]='h'; shell[2]='e'; shell[3]='l'; shell[4]='l'; shell[5]='\0';
-	
+	char buffer[13312];
+	int sectorsRead;
 	makeInterrupt21();
-	interrupt(0x21, 4, "tstpr1", 0, 0);
-
-	//printString("Done");
+	interrupt(0x21, 3, "tstpr1", buffer, &sectorsRead);
+	if (sectorsRead>0)	interrupt(0x21, 4, "tstp1", 0, 0);
+	else			interrupt(0x21, 0, "message not found\r\n", 0, 0);
+	
+//	char shell[6]; 
+//	shell[0]='s'; shell[1]='h'; shell[2]='e'; shell[3]='l'; shell[4]='l'; shell[5]='\0';
+//	
+//	makeInterrupt21();
+//	interrupt(0x21, 4, "tstpr1", 0, 0);
+//
+	printString("Done");
 	while(1);
 
 }
@@ -157,20 +156,29 @@ void printChar (char ch){
 }
 
 void printString(char* str){
-	while (*str) printChar(*str++); //putc(*str++, stdout);
+        while (*str) {
+                if (*str == '\n') printChar('\r');
+                printChar(*str++); //putc(*str++, stdout);
+        }
 }
 void readString(char* string){
-	char letter;
-	int index = 0;
-	while(1){
-		letter = interrupt(0x16, 0, 0, 0, 0);
-		string[index] = letter; 
-		printChar(letter);
-		index++;
-		
-		if (letter == 0xd || index == STR_LIM-2) break;		
-	}
-	printChar('\n');
-	string[index + 1] = '\0';
+        char letter;
+        int index = 0;
+        while(1){
+                letter = interrupt(0x16, 0, 0, 0, 0);
+
+                if (letter == 0xd || index == STR_LIM-2) break;
+
+                if (letter == 0x8){
+                        printChar(0x8); printChar(' '); printChar(0x8);
+                        index--;
+                }else{
+                        string[index] = letter;
+                        printChar(letter);
+                        index++;
+                }
+        }
+        printString("\r\n");
+        string[index] = '\0';
 }
 
