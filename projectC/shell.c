@@ -11,6 +11,7 @@ void main(){
         while(1){
 		syscall(0, ">>");
                 syscall(1, input);
+		syscall(0, "\n");
 		findCommand(input);
       	};
 }
@@ -29,11 +30,26 @@ int getFirstWord(char* input, char* output){
 void findCommand(char* str){
 	char command[80];
 	int endIndex = getFirstWord(str, command);
+	char file[80];
+        char content[13312];
+        getFirstWord(&str[endIndex+1], file);
+
 
 	if (stringsEqual(command, "type")){
-		//char file[80]; getFirstWord(&str[endIndex], file);
-		syscall(0, &str[endIndex]);
-	}
+	//	char file[80];
+	//	char content[13312];
+	//	getFirstWord(&str[endIndex+1], file);
+		
+		if (strLen(file) != 0)
+		{	syscall(3, file, content, 0);
+			syscall(0, content);
+		}else syscall("File not found.\n");
+	
+	}else if(stringsEqual(command, "exec")){
+		if (strLen(file) != 0){
+			syscall(4, file);
+		}else syscall("Program not found.\n");	
+	}else	syscall(0, "Command not found.\n");
 }
 
 int strLen(char* str){

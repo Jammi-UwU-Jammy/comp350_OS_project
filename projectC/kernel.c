@@ -98,7 +98,8 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 	for ( ; i < 512 ; i+=32){
 		char file[7]; getSubstring(buffer, i, i+6, file);
 		if (stringsEqual(fileName, file) == 1){
-			printString("Found: "); printString(file); printString("\nReading...\n");
+			//printString("Found: "); printString(file); 
+			printString("\nReading...\n");
 			fileLocation = i; break;
 		}
 	}
