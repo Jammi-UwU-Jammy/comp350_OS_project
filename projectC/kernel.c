@@ -30,10 +30,10 @@ int main(){
 //	interrupt(0x21, 0, line, 0, 0);
 
 
-	char buffer[13312];
-	int sectorsRead;
-	makeInterrupt21();
-	interrupt(0x21, 4, "tstpr2", buffer, &sectorsRead);
+//	char buffer[13312];
+//	int sectorsRead;
+//	makeInterrupt21();
+//	interrupt(0x21, 4, "tstpr2", buffer, &sectorsRead);
 	
 
 //	char shellname[6]; 
@@ -41,6 +41,12 @@ int main(){
 //	//executeProgram(shellname);
 //	makeInterrupt21();
 //	interrupt(0x21, 4, shellname, 0, 0);
+
+	char line[80];
+	makeInterrupt21();
+	interrupt(0x21,1,line,0,0);
+	interrupt(0x21,0,line,0,0);
+
 
 	printString("Done");
 	while(1);
