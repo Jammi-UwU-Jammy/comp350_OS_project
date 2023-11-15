@@ -30,11 +30,11 @@ int main(){
 //	interrupt(0x21, 0, line, 0, 0);
 
 
-//	char buffer[13312];
-//	int sectorsRead;
-//	makeInterrupt21();
-//	interrupt(0x21, 4, "tstpr2", buffer, &sectorsRead);
-	
+	char buffer[13312];
+	int sectorsRead;
+	makeInterrupt21();
+	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
+	printString(buffer);
 
 //	char shellname[6]; 
 //	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
@@ -42,10 +42,10 @@ int main(){
 //	makeInterrupt21();
 //	interrupt(0x21, 4, shellname, 0, 0);
 
-	char line[80];
-	makeInterrupt21();
-	interrupt(0x21,1,line,0,0);
-	interrupt(0x21,0,line,0,0);
+//	char line[80];
+//	makeInterrupt21();
+//	interrupt(0x21,1,line,0,0);
+//	interrupt(0x21,0,line,0,0);
 
 
 	printString("Done");
