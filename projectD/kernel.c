@@ -15,6 +15,7 @@ void readFile();
 void terminate();
 void executeProgram(char*);
 
+int readAllSectors(char*, int, char*);
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
 void getSubstring(char* str, int begin, int end, char* buffer);
@@ -101,7 +102,7 @@ void executeProgram(char* name){
 
 void readFile(char* fileName, char* fileBuffer, int* s){
 	char buffer[521];
-	int i = 0, fileLocation = -1;
+	int sectorCount, i = 0, fileLocation = -1;
 
 	readSector(buffer, 2);
 	for ( ; i < 512 ; i+=32){
@@ -114,17 +115,9 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 	}
 	
 	if (fileLocation != -1){
-		int sector = fileLocation + 6;
-		for ( i=0 ; i<32 ; i++){
-			if (buffer[sector+i] == 0) break;
-			
-			readSector(fileBuffer+512*i, buffer[sector+i]);
-		}
-	} else i = 0;
-	*s = i;	
-	
-	//TODO: the function is correct but interrupt call 0x21 is wrong code, calling it becomes recursive call
-	//interrupt(0x21, 3, fileName, fileBuffer, &i);
+		sectorCount = readAllSectors(buffer, fileLocation, fileBuffer);
+	}else  	sectorCount = 0;
+	*s = sectorCount;	
 }
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
@@ -155,6 +148,16 @@ void readSector(char* buffer, int sector){
 
 	interrupt(0x13, ax, buffer, cx, dx);
 }
+int readAllSectors(char* sectorList, int fileLocation, char* output){
+	int i, sector = fileLocation + 6;
+        for ( i=0 ; i<32 ; i++){
+        	if (sectorList[sector+i] == 0) break;
+
+                readSector(output+512*i, sectorList[sector+i]);
+        }
+	return i;
+}
+
 
 void printChar (char ch){
 	char al = ch;
