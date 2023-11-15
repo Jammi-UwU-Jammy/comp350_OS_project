@@ -15,6 +15,7 @@ void readFile();
 void terminate();
 void executeProgram(char*);
 
+void cmdLS();
 int readAllSectors(char*, int, char*);
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
@@ -36,6 +37,9 @@ int main(){
 	makeInterrupt21();
 	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
 	printString(buffer);
+
+	//cmdLS();
+
 
 //	char shellname[6]; 
 //	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
@@ -84,6 +88,17 @@ void getSubstring(char* str, int begin, int end, char* result){
 }
 
 /*==============Functions needed for the assignment===================*/
+void cmdLS(){
+	int i; char buffer[512];
+	readSector(buffer, 2);
+        for ( ; i < 512 ; i+=32){
+                char file[7], content[13312]; 
+		getSubstring(buffer, i, i+6, file);
+		readAllSectors(buffer, i, content);
+		printString(file); printString("\t"); printChar(strLen(content)+100);
+	}
+}
+
 void terminate(){
 	while(1);
 }
