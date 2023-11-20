@@ -16,12 +16,9 @@ void terminate();
 void executeProgram(char*);
 void cmdLS();
 
-<<<<<<< HEAD
 void cmdLS();
-=======
 int mod(int, int);
 void printDec(int);
->>>>>>> 4ceac34 (added listing files and sizes)
 int readAllSectors(char*, int, char*);
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
@@ -98,16 +95,6 @@ void getSubstring(char* str, int begin, int end, char* result){
 
 /*==============Functions needed for the assignment===================*/
 void cmdLS(){
-<<<<<<< HEAD
-	int i; char buffer[512];
-	readSector(buffer, 2);
-        for ( ; i < 512 ; i+=32){
-                char file[7], content[13312]; 
-		getSubstring(buffer, i, i+6, file);
-		readAllSectors(buffer, i, content);
-		printString(file); printString("\t"); printChar(strLen(content)+100);
-	}
-=======
 	char buffer[521];
         int i = 0;
 
@@ -122,7 +109,6 @@ void cmdLS(){
 	       	printString(file); printString("\t"); printDec(strLen(content)); printString(" Byte(s)\n");
 
        	}
->>>>>>> 4ceac34 (added listing files and sizes)
 }
 
 void terminate(){
