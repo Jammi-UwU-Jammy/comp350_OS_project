@@ -14,8 +14,14 @@ void handleInterrupt21(int ax, int bx, int cx, int dx);
 void readFile();
 void terminate();
 void executeProgram(char*);
-
 void cmdLS();
+
+<<<<<<< HEAD
+void cmdLS();
+=======
+int mod(int, int);
+void printDec(int);
+>>>>>>> 4ceac34 (added listing files and sizes)
 int readAllSectors(char*, int, char*);
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
@@ -32,11 +38,14 @@ int main(){
 //	interrupt(0x21, 0, line, 0, 0);
 
 
-	char buffer[13312];
-	int sectorsRead;
-	makeInterrupt21();
-	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
-	printString(buffer);
+//	char buffer[13312];
+//	int sectorsRead;
+//	makeInterrupt21();
+//	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
+//	printString(buffer);
+
+	cmdLS();
+	printDec(12);	
 
 	//cmdLS();
 
@@ -89,6 +98,7 @@ void getSubstring(char* str, int begin, int end, char* result){
 
 /*==============Functions needed for the assignment===================*/
 void cmdLS(){
+<<<<<<< HEAD
 	int i; char buffer[512];
 	readSector(buffer, 2);
         for ( ; i < 512 ; i+=32){
@@ -97,6 +107,22 @@ void cmdLS(){
 		readAllSectors(buffer, i, content);
 		printString(file); printString("\t"); printChar(strLen(content)+100);
 	}
+=======
+	char buffer[521];
+        int i = 0;
+
+        readSector(buffer, 2);
+        for ( ; i < 512 ; i+=32){
+                char file[7], content[13312];
+		
+		if (buffer[i] == '\0') break;
+
+		getSubstring(buffer, i, i+6, file);
+		readAllSectors(buffer, i, content); 
+	       	printString(file); printString("\t"); printDec(strLen(content)); printString(" Byte(s)\n");
+
+       	}
+>>>>>>> 4ceac34 (added listing files and sizes)
 }
 
 void terminate(){
@@ -123,7 +149,7 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 	for ( ; i < 512 ; i+=32){
 		char file[7]; getSubstring(buffer, i, i+6, file);
 		if (stringsEqual(fileName, file) == 1){
-			//printString("Found: "); printString(file); 
+			printString("Found: "); printString(file); 
 			printString("\nReading...\n");
 			fileLocation = i; break;
 		}
@@ -148,8 +174,10 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 			readFile(bx, cx, dx);	break;
 		case 4:
 			executeProgram(bx);	break;
-		case 5: 
+		case 5:
 			terminate();		break;
+		case 6:
+			cmdLS();		break;
 		default: 
 			printString("AX invalid.");
 	}
@@ -165,7 +193,7 @@ void readSector(char* buffer, int sector){
 }
 int readAllSectors(char* sectorList, int fileLocation, char* output){
 	int i, sector = fileLocation + 6;
-        for ( i=0 ; i<32 ; i++){
+        for ( i=0 ; i<26 ; i++){
         	if (sectorList[sector+i] == 0) break;
 
                 readSector(output+512*i, sectorList[sector+i]);
@@ -173,6 +201,24 @@ int readAllSectors(char* sectorList, int fileLocation, char* output){
 	return i;
 }
 
+int mod(int divd, int divr){
+	while(divd >= divr) divd -= divr;
+	return divd;
+}
+
+void printDec(int dec){
+	char queue[13312]; int i = 0;
+	while (dec > 0){
+		queue[i] = mod(dec, 10) + 0x30;
+		i++;
+		dec /= 10;
+	}
+	i = strLen(queue);
+	while (i >= 0) {
+		printChar(queue[i]);
+		i--;
+	}
+}
 
 void printChar (char ch){
 	char al = ch;
