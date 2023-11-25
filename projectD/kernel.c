@@ -15,8 +15,9 @@ void readFile();
 void terminate();
 void executeProgram(char*);
 void cmdLS();
+void writeSector(char*, int);
+void deleteFile(char*);
 
-void cmdLS();
 int mod(int, int);
 void printDec(int);
 int readAllSectors(char*, int, char*);
@@ -41,15 +42,12 @@ int main(){
 //	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
 //	printString(buffer);
 
-	cmdLS();
-	printDec(12);	
-
-	//cmdLS();
+//	cmdLS();
 
 
 //	char shellname[6]; 
 //	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
-//	//executeProgram(shellname);
+//	executeProgram(shellname);
 //	makeInterrupt21();
 //	interrupt(0x21, 4, shellname, 0, 0);
 
@@ -58,6 +56,9 @@ int main(){
 //	interrupt(0x21,1,line,0,0);
 //	interrupt(0x21,0,line,0,0);
 
+//	char emptyBuffer[512];
+//	writeSector(emptyBuffer, 2);	
+	deleteFile("messag");
 
 	printString("Done");
 	while(1);
@@ -94,6 +95,52 @@ void getSubstring(char* str, int begin, int end, char* result){
 }
 
 /*==============Functions needed for the assignment===================*/
+void deleteFile(char* fileName){
+	char buffer[521], mapBuffer[512];
+        int sectorCount, sectorOffset; 
+	int i = 0, fileLocation = -1;
+
+	//load map and dir
+        readSector(buffer, 2);
+	readSector(mapBuffer, 1);
+
+	//find file
+        for ( ; i < 512 ; i+=32){
+                char file[7]; getSubstring(buffer, i, i+6, file);
+                if (stringsEqual(fileName, file) == 1){
+                        printString("Found: "); printString(file);
+                        printString("\nReading...\n");
+                        fileLocation = i; break;
+                }
+        }
+
+	if (fileLocation < 0) return;
+	
+	// write to list
+	buffer[fileLocation] = '\0'; //first character
+	sectorOffset = fileLocation + 6;
+        for ( i=0 ; i<32 ; i++){
+		printString("At sector: "); printDec(i+6); printChar('\n');
+                if (buffer[sectorOffset+i] == 0) break;
+		else {
+			mapBuffer[buffer[sectorOffset+i]] = '\0';
+			buffer[sectorOffset+i] = '\0';
+		}
+	}
+	writeSector(mapBuffer, 1);
+	writeSector(buffer, 2);
+}
+
+void writeSector(char* ibuffer, int sector){
+	int al = 1, ah = 3, cl = sector+1, ch = 0 , dl = 0x80, dh = 0;
+        int ax = ah*256 + al;
+        int cx = ch*256 + cl;
+        int dx = dh*256 + dl;
+
+        interrupt(0x13, ax, ibuffer, cx, dx);
+
+}
+
 void cmdLS(){
 	char buffer[521];
         int i = 0;
@@ -163,7 +210,9 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 		case 5:
 			terminate();		break;
 		case 6:
-			cmdLS();		break;
+			writeSector(bx, cx);	break;
+		case 7:
+			deleteFile(bx);		break;
 		default: 
 			printString("AX invalid.");
 	}

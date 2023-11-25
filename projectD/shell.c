@@ -9,7 +9,7 @@ void main(){
        char output[80];
        
         while(1){
-		syscall(0, ">>");
+		syscall(0, "A>> ");
                 syscall(1, input);
 		syscall(0, "\n");
 		findCommand(input);
@@ -48,7 +48,9 @@ void findCommand(char* str){
 	}else if(stringsEqual(command, "exec")){
 		if (strLen(file) != 0){
 			syscall(4, file);
-		}else syscall("Program not found.\n");	
+		}else syscall("Program not found.\n");
+	}else if(stringsEqual(command, "dir")){
+		syscall(6);
 	}else	syscall(0, "Command not found.\n");
 }
 
