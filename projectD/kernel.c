@@ -17,7 +17,9 @@ void executeProgram(char*);
 void cmdLS();
 void writeSector(char*, int);
 void deleteFile(char*);
+void writeFile(char*, char*, int);
 
+void copyNAutofillNull(char* from, char* new, int newLen);
 int mod(int, int);
 void printDec(int);
 int readAllSectors(char*, int, char*);
@@ -58,7 +60,9 @@ int main(){
 
 //	char emptyBuffer[512];
 //	writeSector(emptyBuffer, 2);	
-	deleteFile("messag");
+//	deleteFile("messag");
+
+	writeFile("YASSSSSS", "Lalala", 4);
 
 	printString("Done");
 	while(1);
@@ -94,25 +98,82 @@ void getSubstring(char* str, int begin, int end, char* result){
 	result[i] = '\0';
 }
 
+void copyNAutofillNull(char* from, char* new, int newLen){
+	int i = 0 ;
+	for (; i < newLen ; i++){
+		if (i < newLen - 1) 
+			new[i] = from[i];
+		else{
+			if (strLen(from) < newLen) //old str smaller than new str, fill new str with nulls
+				new[i] = '\0';
+			else break;		//old str longer than new str, break
+		} 
+	}
+	new[newLen-1] = '\0';
+}
+
+void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList){
+	char i = 3, j = 0; 
+	for ( ; i < 512 ; i+= 1){
+		if ((mapBuffer[i] == '\0') && (secNum > 0)){ //if mapslot is empty & stack is not empty
+			sectorList[j] = i;
+			mapBuffer[i] = 0xFE;
+			j++; secNum-- ; //pop
+			//printChar(sectorList[i-3]+100);
+		}
+		if (secNum <= 0) {
+			sectorList[j+1] = '\0';
+			break;
+		}
+	}
+}
+
 /*==============Functions needed for the assignment===================*/
+void writeFile(char* buffer, char* fileName, int sectorNum){
+	char secBuffer[521], mapBuffer[512];
+	char sectorIndices[512-3];
+	int i = 0;
+	
+	readSector(mapBuffer, 1);
+	readSector(secBuffer, 2);
+
+	// fill in sectors to map
+	findEmptySectorsNFill(mapBuffer, sectorNum, sectorIndices);
+
+
+	// write to file directory
+	for ( ; i < 512 ; i+=32){
+		if (secBuffer[i] == '\0') {
+			copyNAutofillNull(fileName, secBuffer + i, 7); // fileName
+			copyNAutofillNull(sectorIndices, secBuffer + i + 6, strLen(sectorIndices)); // sectors
+			writeSector(buffer, sectorIndices[0]); // TODO: only 1 sector right now
+			break;
+		}
+	}
+
+	writeSector(mapBuffer, 1);
+	writeSector(secBuffer, 2);
+}
+
+
 void deleteFile(char* fileName){
 	char buffer[521], mapBuffer[512];
-        int sectorCount, sectorOffset; 
+    int sectorCount, sectorOffset; 
 	int i = 0, fileLocation = -1;
 
 	//load map and dir
-        readSector(buffer, 2);
+    readSector(buffer, 2);
 	readSector(mapBuffer, 1);
 
 	//find file
-        for ( ; i < 512 ; i+=32){
-                char file[7]; getSubstring(buffer, i, i+6, file);
-                if (stringsEqual(fileName, file) == 1){
-                        printString("Found: "); printString(file);
-                        printString("\nReading...\n");
-                        fileLocation = i; break;
-                }
-        }
+	for ( ; i < 512 ; i+=32){
+			char file[7]; getSubstring(buffer, i, i+6, file);
+			if (stringsEqual(fileName, file) == 1){
+					printString("Found: "); printString(file);
+					printString("\nReading...\n");
+					fileLocation = i; break;
+			}
+	}
 
 	if (fileLocation < 0) return;
 	
@@ -120,7 +181,7 @@ void deleteFile(char* fileName){
 	buffer[fileLocation] = '\0'; //first character
 	sectorOffset = fileLocation + 6;
         for ( i=0 ; i<32 ; i++){
-		printString("At sector: "); printDec(i+6); printChar('\n');
+//		printString("At sector: "); printDec(i+6); printChar('\n');
                 if (buffer[sectorOffset+i] == 0) break;
 		else {
 			mapBuffer[buffer[sectorOffset+i]] = '\0';
@@ -213,6 +274,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 			writeSector(bx, cx);	break;
 		case 7:
 			deleteFile(bx);		break;
+		case 8:
+			writeFile(bx, cx, dx);	break;
 		default: 
 			printString("AX invalid.");
 	}
