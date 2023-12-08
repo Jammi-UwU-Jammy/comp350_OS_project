@@ -18,6 +18,8 @@ void cmdLS();
 void writeSector(char*, int);
 void deleteFile(char*);
 void writeFile(char*, char*, int);
+void copyFile(char*, char*);
+void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList);
 
 void copyNAutofillNull(char* from, char* new, int newLen);
 int mod(int, int);
@@ -62,73 +64,25 @@ int main(){
 //	writeSector(emptyBuffer, 2);	
 //	deleteFile("messag");
 
-	writeFile("YASSSSSS", "Lalala", 4);
+	//makeInterrupt21();
+	//interrupt(0x21, 8, "ABCDEFG", "fxGf\0", 1);
+
+	copyFile("tstpr1", "LOLO\0");
 
 	printString("Done");
 	while(1);
 
 }
 
-int strLen(char* str){
-	int i = 0;
-	while (str[i] != '\0') i++;
-	return i;
-}
-
-int  stringsEqual(char* str1, char* str2){
-     	int i = 0;
-    	int leng1 = strLen(str1), leng2 = strLen(str2);
-	if (leng1 != leng2) {
-		return 0;
-	}
-
-     	while (str1[i] == str2[i] && str1[i] != '\0') i++;
-	
-	if (i == leng1) return 1; else return 0;
-};
-
-void getSubstring(char* str, int begin, int end, char* result){
-	// interval of [begin, end)
-	int i = 0;
-
-	for(i ; i < end-begin; i++){
-		result[i] = str[i+begin];
-		//printChar(result[i]);
-	}
-	result[i] = '\0';
-}
-
-void copyNAutofillNull(char* from, char* new, int newLen){
-	int i = 0 ;
-	for (; i < newLen ; i++){
-		if (i < newLen - 1) 
-			new[i] = from[i];
-		else{
-			if (strLen(from) < newLen) //old str smaller than new str, fill new str with nulls
-				new[i] = '\0';
-			else break;		//old str longer than new str, break
-		} 
-	}
-	new[newLen-1] = '\0';
-}
-
-void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList){
-	char i = 3, j = 0; 
-	for ( ; i < 512 ; i+= 1){
-		if ((mapBuffer[i] == '\0') && (secNum > 0)){ //if mapslot is empty & stack is not empty
-			sectorList[j] = i;
-			mapBuffer[i] = 0xFE;
-			j++; secNum-- ; //pop
-			//printChar(sectorList[i-3]+100);
-		}
-		if (secNum <= 0) {
-			sectorList[j+1] = '\0';
-			break;
-		}
-	}
-}
-
 /*==============Functions needed for the assignment===================*/
+void copyFile(char* fNameOld, char* fNameNew){
+	char buffer[13312];
+	int sectorsRead;
+
+	readFile(fNameOld, buffer, &sectorsRead);
+	writeFile(buffer, fNameNew, 1); //TODO: only write 1 sectorfor now
+}
+
 void writeFile(char* buffer, char* fileName, int sectorNum){
 	char secBuffer[521], mapBuffer[512];
 	char sectorIndices[512-3];
@@ -139,13 +93,14 @@ void writeFile(char* buffer, char* fileName, int sectorNum){
 
 	// fill in sectors to map
 	findEmptySectorsNFill(mapBuffer, sectorNum, sectorIndices);
+	if (strLen(sectorIndices) == 0) return; // if no space, return
 
 
 	// write to file directory
 	for ( ; i < 512 ; i+=32){
 		if (secBuffer[i] == '\0') {
 			copyNAutofillNull(fileName, secBuffer + i, 7); // fileName
-			copyNAutofillNull(sectorIndices, secBuffer + i + 6, strLen(sectorIndices)); // sectors
+			copyNAutofillNull(sectorIndices, secBuffer + i + 6, 26); // sectors
 			writeSector(buffer, sectorIndices[0]); // TODO: only 1 sector right now
 			break;
 		}
@@ -298,6 +253,66 @@ int readAllSectors(char* sectorList, int fileLocation, char* output){
         }
 	return i;
 }
+
+int strLen(char* str){
+	int i = 0;
+	while (str[i] != '\0') i++;
+	return i;
+}
+
+int  stringsEqual(char* str1, char* str2){
+     	int i = 0;
+    	int leng1 = strLen(str1), leng2 = strLen(str2);
+	if (leng1 != leng2) {
+		return 0;
+	}
+
+     	while (str1[i] == str2[i] && str1[i] != '\0') i++;
+	
+	if (i == leng1) return 1; else return 0;
+};
+
+void getSubstring(char* str, int begin, int end, char* result){
+	// interval of [begin, end)
+	int i = 0;
+
+	for(i ; i < end-begin; i++){
+		result[i] = str[i+begin];
+		//printChar(result[i]);
+	}
+	result[i] = '\0';
+}
+
+void copyNAutofillNull(char* from, char* new, int newLen){
+	int i = 0 ;
+	for (; i < newLen ; i++){
+		if (i < newLen - 1) 
+			new[i] = from[i];
+		else{
+			if (strLen(from) < newLen) //old str smaller than new str, fill new str with nulls
+				new[i] = '\0';
+			else break;		//old str longer than new str, break
+		} 
+	}
+	new[newLen-1] = '\0';
+}
+
+void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList){
+	char i = 3, j = 0; 
+	for ( ; i < 512 ; i+= 1){
+		if ((mapBuffer[i] == '\0') && (secNum > 0)){ //if mapslot is empty & stack is not empty
+			sectorList[j] = i;
+			mapBuffer[i] = 0xFE;
+			j++; secNum-- ; //pop
+			//printChar(sectorList[i-3]+100);
+		}
+		if (secNum <= 0) {
+			sectorList[j] = '\0';
+			break;
+		}
+	}
+}
+
 
 int mod(int divd, int divr){
 	while(divd >= divr) divd -= divr;
