@@ -4,9 +4,12 @@ int stringsEqual(char*, char*);
 int getFirstWord(char* input, char* output);
 void findCommand(char* str);
 
+
 void main(){
        char input[80];
        char output[80];
+
+	   enableInterrupts();
        
         while(1){
 		syscall(0, "A>> ");

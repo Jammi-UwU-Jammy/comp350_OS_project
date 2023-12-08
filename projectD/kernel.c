@@ -5,6 +5,12 @@ extern int interrupt(int number, int AX, int BX, int CX, int DX);
 extern void makeInterrupt21();
 extern void putInMemory(int seg, int addr, char ch);
 extern void launchProgram(int seg);
+extern void makeTimerInterrupt();
+extern void handleTimerInterrupt(int seg, int sp);
+extern void returnFromTimer(int seg, int sp);
+extern void initializeProgram(int seg);
+extern int setKernelDataSegment();
+extern void restoreDataSegment(int seg);
 
 void printString(char* );
 void printChar(char );
@@ -19,8 +25,10 @@ void writeSector(char*, int);
 void deleteFile(char*);
 void writeFile(char*, char*, int);
 void copyFile(char*, char*);
-void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList);
 
+
+void PROC_TABLE_init();
+void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList);
 void copyNAutofillNull(char* from, char* new, int newLen);
 int mod(int, int);
 void printDec(int);
@@ -28,6 +36,10 @@ int readAllSectors(char*, int, char*);
 int strLen(char*);
 int stringsEqual(char* str1, char* str2);
 void getSubstring(char* str, int begin, int end, char* buffer);
+
+int CURRENT_PROC = -1;
+int PROC_ACTIVE[8] = {0};
+int PROC_SP[8] = {0xff00};
 
 int main(){
 	//char buffer[512];
@@ -48,12 +60,13 @@ int main(){
 
 //	cmdLS();
 
+	char shellname[6]; 
+	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
+	//executeProgram(shellname);
 
-//	char shellname[6]; 
-//	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
-//	executeProgram(shellname);
-//	makeInterrupt21();
-//	interrupt(0x21, 4, shellname, 0, 0);
+	makeInterrupt21();
+	interrupt(0x21, 4, shellname, 0, 0);
+
 
 //	char line[80];
 //	makeInterrupt21();
@@ -67,7 +80,9 @@ int main(){
 	//makeInterrupt21();
 	//interrupt(0x21, 8, "ABCDEFG", "fxGf\0", 1);
 
-	copyFile("tstpr1", "LOLO\0");
+	//copyFile("tstpr1", "LOLO\0");
+
+	makeTimerInterrupt();
 
 	printString("Done");
 	while(1);
@@ -75,6 +90,10 @@ int main(){
 }
 
 /*==============Functions needed for the assignment===================*/
+void PROC_TABLE_init(){
+	//???
+}
+
 void copyFile(char* fNameOld, char* fNameNew){
 	char buffer[13312];
 	int sectorsRead;
@@ -175,20 +194,62 @@ void cmdLS(){
 }
 
 void terminate(){
+	int dataSeg;
+	
+	dataSeg = setKernelDataSegment();
+
+	PROC_ACTIVE[CURRENT_PROC] = 0;
+
+	restoreDataSegment(dataSeg);
+	
 	while(1);
 }
 
-void executeProgram(char* name){
-	char buffer[13312]; int i, sectors;
-	readFile(name, buffer, &sectors);
-	for (i=0 ; i < 13312; i++){
-		putInMemory(0x2000, i, buffer[i]);
+int findFreeSegment(){
+	int i = 0, freeSeg = -1;
+	for ( ; i < 8 ; i++){
+		if (PROC_ACTIVE[i] == 0)
+			return i;
 	}
-	if (sectors != 0) {
-		launchProgram(0x2000);
-	}
-	else printString("Can't find program in memory.\n");
+	return freeSeg;
 }
+
+void executeProgram(char* name){
+	char buffer[13312]; 
+	int i, sectors;
+	int segment, segOffset, dataSeg;
+
+	readFile(name, buffer, &sectors);
+
+	dataSeg = setKernelDataSegment();
+
+	segment = findFreeSegment();
+	if (segment == -1){
+		printString("No available segments.");
+		return;
+	}
+	segOffset = (segment + 2) * 0x1000;
+	for (i=0 ; i < 13312; i++){
+ 		putInMemory(segOffset, i, buffer[i]);
+ 	}
+	initializeProgram(segOffset);
+	PROC_ACTIVE[segment] = 1;
+	PROC_SP[segment] = 0xff00;
+
+	restoreDataSegment(dataSeg);
+}
+
+// void executeProgram(char* name){
+// 	char buffer[13312]; int i, sectors;
+// 	readFile(name, buffer, &sectors);
+// 	for (i=0 ; i < 13312; i++){
+// 		putInMemory(0x2000, i, buffer[i]);
+// 	}
+// 	if (sectors != 0) {
+// 		launchProgram(0x2000);
+// 	}
+// 	else printString("Can't find program in memory.\n");
+// }
 
 void readFile(char* fileName, char* fileBuffer, int* s){
 	char buffer[521];
@@ -208,6 +269,29 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 		sectorCount = readAllSectors(buffer, fileLocation, fileBuffer);
 	}else  	sectorCount = 0;
 	*s = sectorCount;	
+}
+
+void handleTimerInterrupt(int seg, int sp){
+	int dataSeg;
+	//printString("Tic\0");
+
+	dataSeg = setKernelDataSegment();
+
+	if (CURRENT_PROC != -1){
+		PROC_SP[CURRENT_PROC] = sp;
+	}
+	CURRENT_PROC++;
+	while (PROC_ACTIVE[CURRENT_PROC] != 1){
+		if (CURRENT_PROC > 7)
+			CURRENT_PROC=0;
+		else CURRENT_PROC++;
+	}
+	seg = (CURRENT_PROC+2) * 0x1000;
+	sp = PROC_SP[CURRENT_PROC];
+
+	restoreDataSegment(seg);	
+
+	returnFromTimer(seg, sp);
 }
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
