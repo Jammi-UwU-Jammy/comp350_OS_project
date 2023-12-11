@@ -17,6 +17,8 @@ ld86 -o number -d number.o userlib_asm.o
 
 bcc -ansi -c -o tstpr2.o tstpr2.c
 ld86 -o tstpr2 -d tstpr2.o userlib_asm.o
+bcc -ansi -c -o tstpr1.o tstpr1.c
+ld86 -o tstpr1 -d tstpr1.o userlib_asm.o
 
 rm *.o
 

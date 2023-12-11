@@ -62,10 +62,11 @@ int main(){
 
 	char shellname[6]; 
 	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
-	//executeProgram(shellname);
-
 	makeInterrupt21();
-	interrupt(0x21, 4, shellname, 0, 0);
+	executeProgram(shellname);
+
+
+	//interrupt(0x21, 4, shellname, 0, 0);
 
 
 //	char line[80];
@@ -199,10 +200,11 @@ void terminate(){
 	dataSeg = setKernelDataSegment();
 
 	PROC_ACTIVE[CURRENT_PROC] = 0;
-
-	restoreDataSegment(dataSeg);
 	
 	while(1);
+
+	restoreDataSegment(dataSeg);
+
 }
 
 int findFreeSegment(){
@@ -217,13 +219,19 @@ int findFreeSegment(){
 void executeProgram(char* name){
 	char buffer[13312]; 
 	int i, sectors;
-	int segment, segOffset, dataSeg;
+	int segment=-1, segOffset, dataSeg;
 
 	readFile(name, buffer, &sectors);
 
 	dataSeg = setKernelDataSegment();
 
-	segment = findFreeSegment();
+	for (i=0; i < 8 ; i++){
+		if (PROC_ACTIVE[i] == 0){
+			segment = i;
+			break;
+		}
+	}
+
 	if (segment == -1){
 		printString("No available segments.");
 		return;
@@ -272,24 +280,25 @@ void readFile(char* fileName, char* fileBuffer, int* s){
 }
 
 void handleTimerInterrupt(int seg, int sp){
-	int dataSeg;
-	//printString("Tic\0");
+	int dataSeg, i;
 
 	dataSeg = setKernelDataSegment();
+	//	printDec(CURRENT_PROC + 100);
+	
 
 	if (CURRENT_PROC != -1){
 		PROC_SP[CURRENT_PROC] = sp;
 	}
-	CURRENT_PROC++;
+
 	while (PROC_ACTIVE[CURRENT_PROC] != 1){
-		if (CURRENT_PROC > 7)
+		if (CURRENT_PROC++ == 7)
 			CURRENT_PROC=0;
 		else CURRENT_PROC++;
 	}
 	seg = (CURRENT_PROC+2) * 0x1000;
 	sp = PROC_SP[CURRENT_PROC];
 
-	restoreDataSegment(seg);	
+	restoreDataSegment(dataSeg);	
 
 	returnFromTimer(seg, sp);
 }
