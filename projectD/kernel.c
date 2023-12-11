@@ -37,9 +37,9 @@ int strLen(char*);
 int stringsEqual(char* str1, char* str2);
 void getSubstring(char* str, int begin, int end, char* buffer);
 
-int CURRENT_PROC = -1;
-int PROC_ACTIVE[8] = {0};
-int PROC_SP[8] = {0xff00};
+int CURRENT_PROC;
+int PROC_ACTIVE[8];
+int PROC_SP[8];
 
 int main(){
 	//char buffer[512];
@@ -61,12 +61,12 @@ int main(){
 //	cmdLS();
 
 	char shellname[6]; 
+	PROC_TABLE_init();
+
 	shellname[0]='s'; shellname[1]='h'; shellname[2]='e'; shellname[3]='l'; shellname[4]='l'; shellname[5]='\0';
 	makeInterrupt21();
-	executeProgram(shellname);
-
-
-	//interrupt(0x21, 4, shellname, 0, 0);
+	//executeProgram(shellname);
+	interrupt(0x21, 4, shellname, 0, 0);
 
 
 //	char line[80];
@@ -92,7 +92,13 @@ int main(){
 
 /*==============Functions needed for the assignment===================*/
 void PROC_TABLE_init(){
-	//???
+	int i = 0;
+
+	CURRENT_PROC = -1;
+	for ( ; i < 8 ; i ++){
+		PROC_ACTIVE[i] = 0;
+		PROC_SP[i] = 0xff00;
+	}
 }
 
 void copyFile(char* fNameOld, char* fNameNew){
@@ -201,9 +207,10 @@ void terminate(){
 
 	PROC_ACTIVE[CURRENT_PROC] = 0;
 	
-	while(1);
 
 	restoreDataSegment(dataSeg);
+	while(1);
+
 
 }
 
@@ -290,7 +297,15 @@ void handleTimerInterrupt(int seg, int sp){
 		PROC_SP[CURRENT_PROC] = sp;
 	}
 
-	while (PROC_ACTIVE[CURRENT_PROC] != 1){
+	//for (i=0; i < 8 ; i++){
+	//	CURRENT_PROC++;
+	//	if (CURRENT_PROC == 7) 					CURRENT_PROC = 0;
+	//	if (PROC_ACTIVE[CURRENT_PROC] == 1) 	break;
+	//}
+
+	CURRENT_PROC++;
+	printDec(CURRENT_PROC + 100);
+	while (PROC_ACTIVE[CURRENT_PROC] == 0){
 		if (CURRENT_PROC+1 == 7)
 			CURRENT_PROC=0;
 		else CURRENT_PROC++;
