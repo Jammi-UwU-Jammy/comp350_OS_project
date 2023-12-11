@@ -291,7 +291,7 @@ void handleTimerInterrupt(int seg, int sp){
 	}
 
 	while (PROC_ACTIVE[CURRENT_PROC] != 1){
-		if (CURRENT_PROC++ == 7)
+		if (CURRENT_PROC+1 == 8)
 			CURRENT_PROC=0;
 		else CURRENT_PROC++;
 	}
