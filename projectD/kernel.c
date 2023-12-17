@@ -207,10 +207,9 @@ void terminate(){
 
 	PROC_ACTIVE[CURRENT_PROC] = 0;
 	
-
 	restoreDataSegment(dataSeg);
+	
 	while(1);
-
 
 }
 
@@ -243,15 +242,16 @@ void executeProgram(char* name){
 		printString("No available segments.");
 		return;
 	}
-	segOffset = (segment + 2) * 0x1000;
-	for (i=0 ; i < 13312; i++){
- 		putInMemory(segOffset, i, buffer[i]);
- 	}
-	initializeProgram(segOffset);
 	PROC_ACTIVE[segment] = 1;
 	PROC_SP[segment] = 0xff00;
 
 	restoreDataSegment(dataSeg);
+	
+	segOffset = (segment + 2) * 0x1000;
+	for (i=0 ; i < 13312; i++){
+ 		putInMemory(segOffset, i, buffer[i]);
+ 	}
+	initializeProgram(segOffset);	
 }
 
 // void executeProgram(char* name){
@@ -297,26 +297,27 @@ void handleTimerInterrupt(int seg, int sp){
 		PROC_SP[CURRENT_PROC] = sp;
 	}
 
-	//for (i=0; i < 8 ; i++){
-	//	CURRENT_PROC++;
-	//	if (CURRENT_PROC == 7) 					CURRENT_PROC = 0;
-	//	if (PROC_ACTIVE[CURRENT_PROC] == 1) 	break;
-	//}
-
-	CURRENT_PROC++;
-	printDec(CURRENT_PROC + 100);
-	while (PROC_ACTIVE[CURRENT_PROC] == 0){
-		if (CURRENT_PROC+1 == 7)
-			CURRENT_PROC=0;
-		else CURRENT_PROC++;
+	for (i=0; i < 8 ; i++){
+		CURRENT_PROC++;
+		if (CURRENT_PROC == 7) 					CURRENT_PROC = 0;
+		if (PROC_ACTIVE[CURRENT_PROC] == 1) 	break;
 	}
+
+	//CURRENT_PROC++;
+	//while (PROC_ACTIVE[CURRENT_PROC] != 1 ){
+	//	printDec(CURRENT_PROC + 100);
+	//
+	//	if (CURRENT_PROC+1 == 8)
+	//		CURRENT_PROC=0;
+	//	else CURRENT_PROC++;
+	//}
 	seg = (CURRENT_PROC+2) * 0x1000;
 	sp = PROC_SP[CURRENT_PROC];
 
 	restoreDataSegment(dataSeg);	
 
 	returnFromTimer(seg, sp);
-}
+}                                                   
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
 	//printString("Interrupt 21.\n");
