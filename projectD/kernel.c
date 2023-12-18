@@ -27,6 +27,7 @@ void writeFile(char*, char*, int);
 void copyFile(char*, char*);
 
 
+void readText(char *text);
 void PROC_TABLE_init();
 void findEmptySectorsNFill(char* mapBuffer, int secNum, char* sectorList);
 void copyNAutofillNull(char* from, char* new, int newLen);
@@ -57,8 +58,6 @@ int main(){
 //	makeInterrupt21();
 //	interrupt(0x21, 3, "messag", buffer, &sectorsRead);
 //	printString(buffer);
-
-//	cmdLS();
 
 	char shellname[6]; 
 	PROC_TABLE_init();
@@ -189,13 +188,13 @@ void cmdLS(){
 
         readSector(buffer, 2);
         for ( ; i < 512 ; i+=32){
-                char file[7], content[13312];
+            char file[7], content[13312];
 		
-		if (buffer[i] == '\0') break;
+			if (buffer[i] == '\0') break;
 
-		getSubstring(buffer, i, i+6, file);
-		readAllSectors(buffer, i, content); 
-	       	printString(file); printString("\t"); printDec(strLen(content)); printString(" Byte(s)\n");
+			getSubstring(buffer, i, i+6, file);
+			readAllSectors(buffer, i, content); 
+			printString(file); printString("\t"); printDec(strLen(content)); printString(" Byte(s)\n");
 
        	}
 }
@@ -238,10 +237,6 @@ void executeProgram(char* name){
 		}
 	}
 
-	if (segment == -1){
-		printString("No available segments.");
-		return;
-	}
 	PROC_ACTIVE[segment] = 1;
 	PROC_SP[segment] = 0xff00;
 
@@ -297,20 +292,20 @@ void handleTimerInterrupt(int seg, int sp){
 		PROC_SP[CURRENT_PROC] = sp;
 	}
 
-	for (i=0; i < 8 ; i++){
-		CURRENT_PROC++;
-		if (CURRENT_PROC == 7) 					CURRENT_PROC = 0;
-		if (PROC_ACTIVE[CURRENT_PROC] == 1) 	break;
-	}
-
-	//CURRENT_PROC++;
-	//while (PROC_ACTIVE[CURRENT_PROC] != 1 ){
-	//	printDec(CURRENT_PROC + 100);
-	//
-	//	if (CURRENT_PROC+1 == 8)
-	//		CURRENT_PROC=0;
-	//	else CURRENT_PROC++;
+	//for (i=0; i < 8 ; i++){
+	//	CURRENT_PROC++;
+	//	if (CURRENT_PROC == 7) 					CURRENT_PROC = 0;
+	//	if (PROC_ACTIVE[CURRENT_PROC] == 1) 	break;
 	//}
+
+	CURRENT_PROC++;
+	while (PROC_ACTIVE[CURRENT_PROC] != 1 ){
+		printDec(CURRENT_PROC + 10);
+	
+		if (CURRENT_PROC+1 == 8)
+			CURRENT_PROC=0;
+		else CURRENT_PROC++;
+	}
 	seg = (CURRENT_PROC+2) * 0x1000;
 	sp = PROC_SP[CURRENT_PROC];
 
@@ -340,6 +335,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 			deleteFile(bx);		break;
 		case 8:
 			writeFile(bx, cx, dx);	break;
+		
 		default: 
 			printString("AX invalid.");
 	}
@@ -455,6 +451,9 @@ void printString(char* str){
                 printChar(*str++); //putc(*str++, stdout);
         }
 }
+
+
+
 void readString(char* string){
         char letter;
         int index = 0;
